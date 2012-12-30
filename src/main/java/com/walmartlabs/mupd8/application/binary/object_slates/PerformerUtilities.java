@@ -15,7 +15,7 @@
  * 
  */
 
-package com.walmartlabs.mupd8.application.binary;
+package com.walmartlabs.mupd8.application.binary.object_slates;
 
 import com.walmartlabs.mupd8.application.SlateSizeException;
 
@@ -41,5 +41,5 @@ public interface PerformerUtilities {
 	 *
 	 * @param slate - new slate to replace existing slate (if updater; if mapper, ignored)
 	 */
-	public void replaceSlate(byte[] slate) throws SlateSizeException;
+	public void replaceSlate(Slate slate) throws SlateSizeException;
 }

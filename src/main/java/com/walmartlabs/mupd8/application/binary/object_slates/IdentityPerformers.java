@@ -1,4 +1,4 @@
-package com.walmartlabs.mupd8.application.binary;
+package com.walmartlabs.mupd8.application.binary.object_slates;
 
 import java.nio.charset.Charset;
 

@@ -15,7 +15,10 @@
  * 
  */
 
-package com.walmartlabs.mupd8.application.binary;
+package com.walmartlabs.mupd8.application.binary.object_slates;
+
+import com.walmartlabs.mupd8.application.binary.Performer;
+
 
 
 /** An Updater component of an application.
@@ -42,5 +45,5 @@ public interface UnifiedUpdater extends Performer {
      *                    (not a Set<byte[]> because slates to be merged
      *                     need not be unique)
      */
-	void update(PerformerUtilities submitter, String stream, byte[] key, byte[][] events, byte[][] slates);
+	void update(PerformerUtilities submitter, String stream, byte[] key, byte[][] events, Slate[] slates);
 }

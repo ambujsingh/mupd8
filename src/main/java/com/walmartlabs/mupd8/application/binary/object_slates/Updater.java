@@ -15,7 +15,10 @@
  * 
  */
 
-package com.walmartlabs.mupd8.application.binary;
+package com.walmartlabs.mupd8.application.binary.object_slates;
+
+import com.walmartlabs.mupd8.application.binary.Performer;
+
 
 
 /** An Updater component of an application.
@@ -24,5 +27,9 @@ package com.walmartlabs.mupd8.application.binary;
  * @todo TODO Distinguish different states of an updater.
  */
 public interface Updater extends Performer {
-	public void update(PerformerUtilities submitter, String stream, byte[] key, byte[] event, byte[] slate);
+    public Slate toSlate(byte[] bytes);
+    
+    public void update(PerformerUtilities submitter, String stream, byte[] key, byte[] event, Slate slate);
+    
+    public Slate getDefaultSlate();
 }

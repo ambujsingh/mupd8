@@ -15,7 +15,10 @@
  * 
  */
 
-package com.walmartlabs.mupd8.application.binary;
+package com.walmartlabs.mupd8.application.binary.object_slates;
+
+import com.walmartlabs.mupd8.application.binary.Performer;
+
 
 
 /** An Updater component of an application.
@@ -40,7 +43,7 @@ public interface DistributedUpdater extends Performer {
 	 *  @param event     - event value (payload)
 	 *  @param slate     - slate to update
      */
-	void update(PerformerUtilities submitter, String stream, byte[] key, byte[] event, byte[] slate);
+	void update(PerformerUtilities submitter, String stream, byte[] key, byte[] event, Slate slate);
 
 	/** Update method that merges two slates into one.
 	 *
@@ -49,5 +52,5 @@ public interface DistributedUpdater extends Performer {
 	 *  @param slateA    - slate to merge (in no particular order)
 	 *  @param slateB    - slate to merge (in no particular order)
 	 */
-	void merge(PerformerUtilities submitter, byte[] key, byte[] slateA, byte[] slateB);
+	void merge(PerformerUtilities submitter, byte[] key, Slate slateA, Slate slateB);
 }
