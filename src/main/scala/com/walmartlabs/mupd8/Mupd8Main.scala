@@ -36,8 +36,7 @@ import org.jboss.netty.buffer.{ ChannelBuffers, ChannelBuffer }
 import org.jboss.netty.channel.{ ChannelHandlerContext, Channel }
 import org.jboss.netty.handler.codec.oneone.OneToOneEncoder
 import org.jboss.netty.handler.codec.replay.ReplayingDecoder
-import com.walmartlabs.mupd8.application.binary.Slate
-import com.walmartlabs.mupd8.application.binary.IdentityPerformers
+import com.walmartlabs.mupd8.application.binary.slate_handlers._
 import com.walmartlabs.mupd8.application.binary
 import com.walmartlabs.mupd8.compression.CompressionFactory
 import com.walmartlabs.mupd8.compression.CompressionService
@@ -556,7 +555,7 @@ class SlateCache(val io: IoPool, val usageLimit: Long) {
     item.map(_.slate)
   }
 
-  def waitForSlate(akey: (String, Key), action: Slate => Unit, updater : binary.Updater, doSafePut : Boolean = true) {
+  def waitForSlate(akey: (String, Key), action: Slate => Unit, updater : SlateUpdater, doSafePut : Boolean = true) {
     val skey = buildKey(akey._1, akey._2)
     lock.acquire()
     val item = table.get(skey)
@@ -709,8 +708,8 @@ class AppStaticInfo(val configDir: Option[String], val appConfig: Option[String]
       var wrapperClass: Option[String] = null
       log("\nMupd8App loading ... " + p.name + " " + p.mtype)
       val classObject = p.mtype match {
-        case Mapper => isMapper = true; wrapperClass = p.wrapperClass; p.jclass.map(Class.forName(_).asInstanceOf[Class[binary.Mapper]])
-        case Updater => isMapper = false; wrapperClass = p.wrapperClass; p.jclass.map(Class.forName(_).asInstanceOf[Class[binary.Updater]])
+        case Mapper => isMapper = true; wrapperClass = p.wrapperClass; p.jclass.map(Class.forName(_).asInstanceOf[Class[SlateMapper]])
+        case Updater => isMapper = false; wrapperClass = p.wrapperClass; p.jclass.map(Class.forName(_).asInstanceOf[Class[SlateUpdater]])
         case _ => None
       }
       classObject.map { x =>
@@ -731,7 +730,7 @@ class AppStaticInfo(val configDir: Option[String], val appConfig: Option[String]
               if (!elastic) {
                 new UpdateWrapper(userProvidedPerformer, prePerformer)
               } else {
-                new ElasticWrapper(userProvidedPerformer.asInstanceOf[binary.Updater], prePerformer)
+                new ElasticWrapper(userProvidedPerformer.asInstanceOf[SlateUpdater], prePerformer)
               }
             }
           } else {
@@ -970,7 +969,7 @@ class Decoder(val appRun: AppRuntime) extends ReplayingDecoder[DecodingState](PR
   }
 }
 
-class TLS(appRun: AppRuntime) extends binary.PerformerUtilities {
+class TLS(appRun: AppRuntime) extends SlatePerformerUtilities {
   val objects = appRun.app.performerFactory.map(_.map(_.apply()))
   val slateCache = new SlateCache(appRun.storeIo, appRun.slateRAM / appRun.pool.poolsize)
   val queue = new PriorityBlockingQueue[Runnable]
@@ -982,7 +981,7 @@ class TLS(appRun: AppRuntime) extends binary.PerformerUtilities {
     (for (
       (oo, i) <- objects zipWithIndex;
       o <- oo;
-      if excToOption(o.asInstanceOf[binary.UnifiedUpdater]) != None
+      if excToOption(o.asInstanceOf[UnifiedSlateUpdater]) != None
     ) yield i)(breakOut)
 
   override def publish(stream: String, key: Array[Byte], event: Array[Byte]) {
@@ -1083,7 +1082,7 @@ class AppRuntime(appID: Int,
   def getSlate(key: (String, Key)) = {
     assert(pool.getDestinationHost(PerformerPacket.getKey(app.performerName2ID(key._1), key._2)) == pool.cluster.self)
     val future = new Later[Slate]
-    getTLS(app.performerName2ID(key._1), key._2).slateCache.waitForSlate(key, future.set(_), IdentityPerformers.IDENTITY_UPDATER_INSTANCE, false)
+    getTLS(app.performerName2ID(key._1), key._2).slateCache.waitForSlate(key, future.set(_), new IdentitySlateUpdater(), false)
     Option((future.get()).toBytes())
   }
 
@@ -1257,11 +1256,11 @@ class AppRuntime(appID: Int,
 
   def getTLS = threadMap(Thread.currentThread().getId)
 
-  def getMapper(pid: Int) = getTLS.objects(pid).get.asInstanceOf[binary.Mapper]
+  def getMapper(pid: Int) = getTLS.objects(pid).get.asInstanceOf[SlateMapper]
 
-  def getUpdater(pid: Int) = getTLS.objects(pid).get.asInstanceOf[binary.Updater]
+  def getUpdater(pid: Int) = getTLS.objects(pid).get.asInstanceOf[SlateUpdater]
 
-  def getUnifiedUpdater(pid: Int) = getTLS.objects(pid).get.asInstanceOf[binary.UnifiedUpdater]
+  def getUnifiedUpdater(pid: Int) = getTLS.objects(pid).get.asInstanceOf[UnifiedSlateUpdater]
 
   // This hash function must be the same as the MapUpdatePool and different from SlateCache
   def getTLS(pid: Int, key: Key) =

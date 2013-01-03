@@ -14,23 +14,23 @@
  * limitations under the License.
  *
  */
-package com.walmartlabs.mupd8.application.binary.object_slates;
+package com.walmartlabs.mupd8.application.binary.slate_handlers;
 
 import com.walmartlabs.mupd8.application.binary.Performer;
 import com.walmartlabs.mupd8.application.statistics.BeanManager;
 import com.walmartlabs.mupd8.application.statistics.PrePerformer;
 import com.walmartlabs.mupd8.application.statistics.StatisticsMXBean;
 
-public class UpdateWrapper implements Updater {
+public class SlateUpdateWrapper implements SlateUpdater {
 
-	private Updater updater;
+	private SlateUpdater updater;
 	private PrePerformer prePerformer;
 
 	private static final String WRAPPER_SUFFIX = "_wrapper";
 
-	public UpdateWrapper(Performer updater, PrePerformer preUpdater)
+	public SlateUpdateWrapper(Performer updater, PrePerformer preUpdater)
 			throws Exception {
-		this.updater = (Updater) updater;
+		this.updater = (SlateUpdater) updater;
 		this.prePerformer = preUpdater;
 		try {
 			BeanManager.INSTANCE.registerBean((StatisticsMXBean) preUpdater
@@ -48,13 +48,13 @@ public class UpdateWrapper implements Updater {
 	}
 
 	@Override
-	public void update(PerformerUtilities submitter, String stream, byte[] key,
+	public void update(SlatePerformerUtilities submitter, String stream, byte[] key,
 			byte[] event, Slate slate) {
 		prePerformer.prePerform(key, event);
 		updater.update(submitter, stream, key, event, slate);
 	}
 
-	public void setUpdater(Updater updater) {
+	public void setUpdater(SlateUpdater updater) {
 		this.updater = updater;
 	}
 

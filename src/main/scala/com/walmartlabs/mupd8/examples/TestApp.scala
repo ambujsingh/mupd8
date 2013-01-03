@@ -22,13 +22,14 @@ import org.json.simple.JSONValue
 import com.walmartlabs.mupd8.application._
 import com.walmartlabs.mupd8.application.Config
 import com.walmartlabs.mupd8.application.binary._
+import com.walmartlabs.mupd8.application.binary.slate_handlers._
 
-class T10Mapper(config : Config, val name : String) extends Mapper {    
+class T10Mapper(config : Config, val name : String) extends SlateMapper {
   override def getName = name
     
   val streams = Map( "k1" -> "K1Stream", "k2" -> "K2Stream", "k3" -> "K3Stream", "k4" -> "K4Stream" )
   
-  override def map(perfUtil : PerformerUtilities, stream : String, key : Array[Byte], event : Array[Byte]) {
+  override def map(perfUtil : SlatePerformerUtilities, stream : String, key : Array[Byte], event : Array[Byte]) {
     val json = new JSONObject(new String(event, "UTF-8"))
     streams foreach { case(key,stream) =>
       perfUtil.publish(stream, json.getString(key).getBytes("UTF-8"), event) 
@@ -49,7 +50,7 @@ class TestSlate(jsonParam: Option[JSONObject]) extends Slate {
     
 }
 
-class KnUpdater (config : Config, val name : String) extends Updater {
+class KnUpdater (config : Config, val name : String) extends SlateUpdater {
   override def getName = name
   
   override def toSlate(bytes : Array[Byte]) = {
@@ -57,7 +58,7 @@ class KnUpdater (config : Config, val name : String) extends Updater {
     new TestSlate(Option(json))
   }
 
-  override def update(perfUtil : PerformerUtilities, stream : String, key : Array[Byte], event : Array[Byte], slate : Slate) {
+  override def update(perfUtil : SlatePerformerUtilities, stream : String, key : Array[Byte], event : Array[Byte], slate : Slate) {
     val testSlate = slate.asInstanceOf[TestSlate]
     val slatej = testSlate.json
     val eventj = new JSONObject(new String(event, "UTF-8"))

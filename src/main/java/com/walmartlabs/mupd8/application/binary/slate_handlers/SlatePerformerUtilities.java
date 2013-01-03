@@ -15,7 +15,7 @@
  * 
  */
 
-package com.walmartlabs.mupd8.application.binary.object_slates;
+package com.walmartlabs.mupd8.application.binary.slate_handlers;
 
 import com.walmartlabs.mupd8.application.SlateSizeException;
 
@@ -26,7 +26,7 @@ import com.walmartlabs.mupd8.application.SlateSizeException;
  * 
  * A Performer should use EventPublisher.publish (only) to post a new event.
  */
-public interface PerformerUtilities {
+public interface SlatePerformerUtilities {
 	/** Direct version of publish (recommended for new code).
 	 * 
 	 * @param stream - name of stream to which to publish event

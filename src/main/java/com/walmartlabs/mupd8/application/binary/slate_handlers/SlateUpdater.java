@@ -15,7 +15,7 @@
  * 
  */
 
-package com.walmartlabs.mupd8.application.binary.object_slates;
+package com.walmartlabs.mupd8.application.binary.slate_handlers;
 
 import com.walmartlabs.mupd8.application.binary.Performer;
 
@@ -26,10 +26,10 @@ import com.walmartlabs.mupd8.application.binary.Performer;
  * Applications should implement Mapper and Updater interfaces as needed.
  * @todo TODO Distinguish different states of an updater.
  */
-public interface Updater extends Performer {
+public interface SlateUpdater extends Performer {
     public Slate toSlate(byte[] bytes);
     
-    public void update(PerformerUtilities submitter, String stream, byte[] key, byte[] event, Slate slate);
+    public void update(SlatePerformerUtilities submitter, String stream, byte[] key, byte[] event, Slate slate);
     
     public Slate getDefaultSlate();
 }

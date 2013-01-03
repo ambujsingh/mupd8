@@ -20,19 +20,17 @@ import java.util.concurrent.atomic.AtomicBoolean
 import scala.collection.mutable.HashMap
 import java.util.ArrayList
 import com.walmartlabs.mupd8.Mupd8Utils
-import com.walmartlabs.mupd8.application.binary.Slate
-import com.walmartlabs.mupd8.application.binary.Updater;
+import com.walmartlabs.mupd8.application.binary.slate_handlers._
 import com.walmartlabs.mupd8.application.statistics.PrePerformer
-import com.walmartlabs.mupd8.application.binary.PerformerUtilities
 
-class ElasticWrapper(val updater: Updater, prePerformer: PrePerformer) extends Updater {
+class ElasticWrapper(val updater: SlateUpdater, prePerformer: PrePerformer) extends SlateUpdater {
 
   val WRAPPER_SUFFIX = "_elastic_wrapper"
   var loadRedistributionInProgress = false
   var oracle: ElasticOracle = null
   var buffer: HashMap[Float, ArrayList[(String, Array[Byte], Array[Byte])]] = new HashMap[Float, ArrayList[(String, Array[Byte], Array[Byte])]] //TODO concurrent hash map
   var keyHashes: HashMap[Float, Array[Byte]] = new HashMap[Float, Array[Byte]]
-  var submitter: PerformerUtilities = null;
+  var submitter: SlatePerformerUtilities = null;
 
   override def getName(): String = {
     updater.getName() + WRAPPER_SUFFIX;
@@ -60,12 +58,12 @@ class ElasticWrapper(val updater: Updater, prePerformer: PrePerformer) extends U
     buffer.clear()
   }
 
-  def actualUpdate(submitter: PerformerUtilities, stream: String, key: Array[Byte], event: Array[Byte], slate: Slate) = {
+  def actualUpdate(submitter: SlatePerformerUtilities, stream: String, key: Array[Byte], event: Array[Byte], slate: Slate) = {
     prePerformer.prePerform(key, event)
     updater.update(submitter, stream, key, event, slate)
   }
 
-  override def update(submitter: PerformerUtilities, stream: String, key: Array[Byte], event: Array[Byte], slate: Slate) = {
+  override def update(submitter: SlatePerformerUtilities, stream: String, key: Array[Byte], event: Array[Byte], slate: Slate) = {
     if (loadRedistributionInProgress && oracle.isMovingKey(key)) {
       var fl = Mupd8Utils.hash2Float(key)
       keyHashes += (fl -> key)
