@@ -227,6 +227,7 @@ class MapUpdatePool[T <: MapUpdateClass[T]](val poolsize: Int, val ring: HashRin
 
   class ThreadData(val me: Int) {
     val queue = new PriorityBlockingQueue[innerCompare]
+    val threadId = me
     private[MapUpdatePool] var keyInUse: Any = null
     private[MapUpdatePool] var keyQueue = new mutable.Queue[Runnable]
     private[MapUpdatePool] val keyLock = new scala.concurrent.Lock
@@ -279,6 +280,10 @@ class MapUpdatePool[T <: MapUpdateClass[T]](val poolsize: Int, val ring: HashRin
       val size = keyQueue.size
       //      keyLock.release
       size
+    }
+
+    def getId() = {
+      threadId
     }
   }
 
@@ -678,7 +683,6 @@ object loadConfig {
 
     performers.map(p =>
       Performer(
-        name = p._1,
         pubs = convertStrings(p._2.get("publishes_to").asInstanceOf[ArrayList[String]]),
         subs = convertStrings(p._2.get("subscribes_to").asInstanceOf[ArrayList[String]]),
         mtype = Mupd8Type.withName(p._2.get("mupd8_type").asInstanceOf[String]),
@@ -1105,7 +1109,7 @@ class AppRuntime(appID: Int,
           sortWith(_._2 >= _._2).
           map(x => x._1 + (x._1.length to 50 map (_ => " ")).foldLeft("")(_ + _) + " " + x._2).foldLeft("")(_ + _ + "\n") +
           {
-            val poolsizes = pool.pool.map(p => (p.queue.size, p.getSerialQueueSize())).sortWith { case ((a, b), (c, d)) => a + b < c + d }
+            val poolsizes = pool.pool.map(p => (p.queue.size, p.getSerialQueueSize(), p.getId())).sortWith { case ((a, b, e), (c, d, f)) => a + b < c + d }
             val num = (10 :: poolsizes.size / 2 :: Nil).min
             val currTime = java.lang.System.nanoTime()
             val startTimes = threadVect.map(_.startTime).filter(_ != 0)
@@ -1114,7 +1118,7 @@ class AppRuntime(appID: Int,
               (currTime - startTimes.sum / startTimes.size) / 500000 // expected exec time is twice the current exec time
             else
               0
-            "\nAvg Queue size: " + poolsizes.map { case (a, b) => a + b }.sum.toFloat / poolsizes.size +
+            "\nAvg Queue size: " + poolsizes.map { case (a, b, c) => a + b }.sum.toFloat / poolsizes.size +
               "\nAvg Queue size w/o hot conductor: " + (if (nonHotThreads.isEmpty) "0.0" else nonHotThreads.sum / nonHotThreads.size) +
               "\nMin size: " + poolsizes.take(num) +
               "\nMax size: " + poolsizes.reverse.take(num) +
